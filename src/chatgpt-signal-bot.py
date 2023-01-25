@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 my_number = os.getenv("MY_NUMBER")
-exit_keyword = "Goodbye"
+exit_keyword = ">Goodbye!"
 stop_sequence = "#"
 conversations = {}
 
@@ -20,7 +20,7 @@ human_delay = 5
 too_many_error= "Too Many Requests"
 
 logging.basicConfig(
-    filename='bot_log.log', 
+    filename='./logs/bot_log.log', 
     encoding='utf-8',
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
@@ -108,46 +108,6 @@ def generate_text(prompt, dst_number):
     logging.info(f"Chatgpt: answering [ {response.strip()} ]")
     return response.strip()
 
-# def generate_text_post(prompt):
-#     data = {
-#         "prompt": prompt,
-#         "model": "text-davinci-003",
-#         "max_tokens": 2048,
-#         "temperature": 0.9,
-#         "top_p": 1,
-#         "frequency_penalty": 0,
-#         "presence_penalty": 0.0,
-#         "stop": [stop_sequence]
-#     }
-#     connected = False
-#     while not connected:
-#         try:
-#             logging.info(f"Sending to chatgpt: {prompt}")
-#             response = requests.post(
-#                 endpoint_openai,
-#                 headers=headers_openai,
-#                 json=data)
-#             response.raise_for_status()
-#             response = json.loads(response.text)
-#             connected = True
-#         except Exception as e:
-#             logging.warning(e)
-#             if too_many_error in str(e):
-#                 logging.warning("Chatgpt: Too much request for openai, waiting..")
-#                 send_signal_msg(my_number, target_number, "une seconde, j'arrive. Je vais faire pipi.")
-#                 time.sleep(60)
-#             pass
-
-#     # Select last answer
-#     response =  response["choices"][-1]["text"] + stop_sequence
-#     print(prompt)
-#     logging.info(f"Chatgpt: answering [ {response} ]")
-#     return response
-
-
-# Initializing the conversation
-# send_signal_msg(my_number,target_number, signal_msg)
-
 
 # Continuation of the conversation
 logging.info(" --- Chatbot started ---")
@@ -158,15 +118,21 @@ while True:
         continue
 
     for key,value in user_input.items():
+
+        # Check if exit is asked
+        if exit_keyword in value:
+            for k,v in user_input():
+                send_signal_msg(my_number,k,"Ok, je me tais. Bye")
+            logging.info(f"Exiting, requested by {key}")
+            break
+
         # Requesting the next response
         response = generate_text(value, key)
+
         # Sendind message to each user
         send_signal_msg(my_number,key,response)
+
         # Appending the response to the conversation
         conversations[key] += response
         logging.info(response)
-
     
-    # if exit_keyword in user_input:
-    #     send_signal_msg(my_number,target_number,"Ok, je me tais. Bye")
-    #     break
