@@ -14,13 +14,13 @@ stop_sequence = "#"
 conversations = {}
 
 endpoint_openai = "https://api.openai.com/v1/completions"
-endpoint_signal_api_rcv = f"http://localhost:8088/v1/receive/{my_number}"
-endpoint_signal_api_send = "http://localhost:8088/v2/send"
+endpoint_signal_api_rcv = f"http://signal:8080/v1/receive/{my_number}"
+endpoint_signal_api_send = "http://signal:8080/v2/send"
 human_delay = 5
 too_many_error= "Too Many Requests"
 
 logging.basicConfig(
-    filename='./logs/bot_log.log', 
+    filename='./logs/bot_log.log',
     encoding='utf-8',
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
@@ -47,7 +47,7 @@ def rcv_signal_msg():
 
     response = json.loads(response.text)
     if not response:
-        return {} 
+        return {}
 
     for envelope in response:
         if "dataMessage" in envelope["envelope"]:
@@ -57,11 +57,11 @@ def rcv_signal_msg():
             if source in conversations:
                 conversations[source] += message
             else:
-                conversations[source] = message 
+                conversations[source] = message
             new_messages[source] = conversations[source]
             logging.info("Signal: New messages received:")
             logging.info(new_messages)
-    return new_messages 
+    return new_messages
 
 def send_signal_msg(src_num, dst_num, message):
     signal_message = {
@@ -112,9 +112,8 @@ def generate_text(prompt, dst_number):
 # Continuation of the conversation
 logging.info(" --- Chatbot started ---")
 while True:
-    print(conversations)
     user_input = rcv_signal_msg()
-    if not user_input: 
+    if not user_input:
         continue
 
     for key,value in user_input.items():
@@ -135,4 +134,4 @@ while True:
         # Appending the response to the conversation
         conversations[key] += response
         logging.info(response)
-    
+
