@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 my_number = os.getenv("MY_NUMBER")
+mode = os.getenv("MODE")
+target_list = os.getenv("TARGET_LIST")
+target_list = list(target_list.split(","))
 exit_keyword = ">Goodbye!"
 stop_sequence = "#"
 conversations = {}
@@ -26,13 +29,17 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
 
-# headers_openai = {
-#         "Content-Type": "application/json",
-#         "Authorization": f"Bearer {api_key}",
-#     }
 headers_signal_api = {
         "Content-Type": "application/json"
 }
+
+# if mode is on_target only, populate the list
+logging.info(" --- Chatbot started ---")
+if mode == "on_target":
+    logging.info(target_list)
+    for number in target_list:
+        conversations[number] = ""
+    logging.info(f"On target mode activated on: {conversations}")
 
 def rcv_signal_msg():
     new_messages = {}
@@ -56,9 +63,11 @@ def rcv_signal_msg():
             logging.info(f"Signal: new message received from {source}: {message}")
             if source in conversations:
                 conversations[source] += message
+                new_messages[source] = conversations[source]
             else:
-                conversations[source] = message
-            new_messages[source] = conversations[source]
+                if mode == "all":
+                    conversations[source] = message
+                    new_messages[source] = conversations[source]
             logging.info("Signal: New messages received:")
             logging.info(new_messages)
     return new_messages
@@ -110,7 +119,6 @@ def generate_text(prompt, dst_number):
 
 
 # Continuation of the conversation
-logging.info(" --- Chatbot started ---")
 while True:
     user_input = rcv_signal_msg()
     if not user_input:
