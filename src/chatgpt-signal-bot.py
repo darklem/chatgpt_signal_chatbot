@@ -60,16 +60,16 @@ def rcv_signal_msg():
         if "dataMessage" in envelope["envelope"]:
             message = envelope["envelope"]["dataMessage"]["message"]
             source = envelope["envelope"]["source"]
-            logging.info(f"Signal: new message received from {source}: {message}")
             if source in conversations:
+                logging.info(f"Signal: new message received from {source}: {message}")
                 conversations[source] += message
                 new_messages[source] = conversations[source]
             else:
                 if mode == "all":
                     conversations[source] = message
                     new_messages[source] = conversations[source]
-            logging.info("Signal: New messages received:")
-            logging.info(new_messages)
+            # logging.info("Signal: New messages received:")
+            # logging.info(new_messages)
     return new_messages
 
 def send_signal_msg(src_num, dst_num, message):
@@ -98,7 +98,7 @@ def generate_text(prompt, dst_number):
             response = openai.Completion.create(
                 model="text-davinci-003",
                 prompt=f"{prompt}",
-                temperature=0.0,
+                temperature=0.9,
                 max_tokens=2048,
                 top_p=1,
                 frequency_penalty=0,
@@ -108,10 +108,10 @@ def generate_text(prompt, dst_number):
             connected = True
         except Exception as e:
             logging.warning(e)
+            time.sleep(60)
             if too_many_error in str(e):
                 logging.warning("Chatgpt: Too much request for openai, waiting..")
                 send_signal_msg(my_number, dst_number, "une seconde, j'arrive. Je vais faire pipi.")
-                time.sleep(60)
             pass
     response =  response.choices[0].text
     logging.info(f"Chatgpt: answering [ {response.strip()} ]")
